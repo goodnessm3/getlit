@@ -141,7 +141,7 @@ def get_paper(doi):
 def load_services():
 
     out = []
-    with open("main\services.txt", "r") as f:
+    with open("main/services.txt", "r") as f:
         for line in f.readlines():
             out.append(line.rstrip("\n"))
     return out
