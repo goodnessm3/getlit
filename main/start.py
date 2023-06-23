@@ -9,13 +9,13 @@ bp = Blueprint('lookup_page', __name__, url_prefix='')
 @bp.route('/getlit', methods=('GET', 'POST'))
 def begin():
 
-    if session.get("tok", None) == "louder":
+    if request.method == "GET":
 
-        if request.method == "GET":
+        return render_template('page1/page1.html')
 
-            return render_template('page1/page1.html')
+    elif request.method == "POST":
+        if session.get("tok", None) == "louder":
 
-        elif request.method == "POST":
             print(request.form)
             doi = request.form["doi"]
             data, name, myinfo = get_paper(doi)
@@ -26,9 +26,8 @@ def begin():
             db.commit()
 
             return send_file(data, download_name=name)
-
-    else:
-        return redirect(url_for("lookup_page.randomimg"))
+        else:
+            return render_template('page1/page1.html')
 
 
 @bp.route('/ajax', methods=('GET',))

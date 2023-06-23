@@ -59,6 +59,12 @@ def get_info(js):
 
 
 def write_info_to_db(conn, doi, dc):
+
+    conn.execute("SELECT * FROM papers WHERE doi = ?", (doi,))
+    res = conn.fetchall()
+    if res:
+        return  # don't try to re-add a paper, the unique constraint will fail
+
     insert_tup = (doi,
                   dc["first_author"],
                   dc["authors"],
