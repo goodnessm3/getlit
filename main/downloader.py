@@ -15,7 +15,7 @@ works = Works()
 def get_authors(js):
     out = []
     for x in js["author"]:
-        name = (f'{x["given"]} {x["family"]}')
+        name = f'{x["given"]} {x["family"]}'
         out.append(name)
     return out  # this is destined to be a string written into sql so it wouldn't understand a list anyway
 
@@ -24,7 +24,7 @@ def get_first_author(js):
     out = None  # default if no first author is listed
     for x in js["author"]:
         if x["sequence"] == "first":
-            out = (f'{x["given"]} {x["family"]}')
+            out = f'{x["given"]} {x["family"]}'
     return out
 
 
@@ -108,7 +108,10 @@ def get_dl_link(url_root, doi):
 
     """get a pdf download link from the service at url_root for a document specified by doi"""
 
-    resp = requests.get(url_root + "/" + doi)
+    try:
+        resp = requests.get(url_root + "/" + doi)
+    except Exception as e:
+        raise e  # sometimes services go down
     soup = BeautifulSoup(resp.content, "html.parser")
     for x in soup.find_all("button"):  # download link used to be a href=, changed to a button
         y = x.get("onclick")
@@ -125,15 +128,22 @@ def get_paper(doi):
     """Look up the citation info for a paper specified by doi, using CrossRef. Download the paper
     from an external service, and make an entry in a local db storing the paper info."""
 
-    service = SERVICES[0]
-    # TODO: multiple services
-
     myjson = works.doi(doi)  # the raw json from crossref
     myinfo = get_info(myjson)  # find certain details like author, year
     fname = determine_filename(myjson)  # decide what to call the file when we save it, using json, not the parsed info
 
-    dl_link = get_dl_link(service, doi)
-    inmemory = BytesIO(requests.get(dl_link).content)  # don't save locally just send to user
+    inmemory = None  # default values only overwritten if one service is successful in the loop
+
+    for x in SERVICES:
+        try:
+            dl_link = get_dl_link(x, doi)  # this also queries the service and may fail, exception is propagated
+            resp = requests.get(dl_link)
+            inmemory = BytesIO(resp.content)  # don't save locally just send to user
+            print(f"connection to {x} succeeded!")
+            break  # the first service that worked
+
+        except requests.exceptions.ConnectionError:
+            print(f"connection to {x} failed")
 
     return inmemory, fname, myinfo
 
@@ -144,6 +154,19 @@ def load_services():
     with open("main/services.txt", "r") as f:
         for line in f.readlines():
             out.append(line.rstrip("\n"))
+    return out
+
+
+def check_services():
+
+    out = ""
+    for x in SERVICES:
+        try:
+            requests.get(x)
+            out += "1"
+        except requests.exceptions.ConnectionError:
+            out += "0"
+
     return out
 
 

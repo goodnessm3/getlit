@@ -12,5 +12,17 @@
       <input type="submit" value="Get">
   </form>
 
+<br>
+
+{% if "tok" in session and session["tok"] == "louder" %}
+<marquee behavior="alternate" direction="up">
+<img src="{{ url_for('static', filename='cbsmall.png') }}", height="240">
+</marquee>
+{% else %}
+<img src="{{ url_for('static', filename='cbsmall.png') }}">
+{% endif %}
+
+
+
 {% endblock %}
 

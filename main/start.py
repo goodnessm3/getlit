@@ -1,6 +1,6 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, send_file
 from io import BytesIO
-from main.downloader import get_paper, write_info_to_db
+from main.downloader import get_paper, write_info_to_db, check_services
 from main.db import get_db
 
 bp = Blueprint('lookup_page', __name__, url_prefix='')
@@ -25,7 +25,11 @@ def begin():
             write_info_to_db(cur, doi, myinfo)
             db.commit()
 
-            return send_file(data, download_name=name)
+            if data:
+                return send_file(data, download_name=name)
+            else:
+                flash("Connection to all services failed.")
+                return render_template('page1/page1.html')
         else:
             return render_template('page1/page1.html')
 
@@ -37,3 +41,9 @@ def ajax_example():
         session["tok"] = "louder"
 
     return render_template('ajax/ajax.html')
+
+
+@bp.route('/services', methods=("GET",))
+def services():
+
+    return check_services()

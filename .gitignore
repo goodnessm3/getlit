@@ -1,0 +1,7 @@
+*/__pycache__
+.idea
+websocketd
+*.log
+*.png
+services.txt
+*.sqlite3
