@@ -137,6 +137,10 @@ def get_paper(doi):
     for x in SERVICES:
         try:
             dl_link = get_dl_link(x, doi)  # this also queries the service and may fail, exception is propagated
+            if not dl_link:
+                print(f"Download link not found on page for {x}")
+                continue
+            print("Found download link: ", dl_link)
             resp = requests.get(dl_link)
             inmemory = BytesIO(resp.content)  # don't save locally just send to user
             print(f"connection to {x} succeeded!")
