@@ -142,7 +142,7 @@ def get_paper(doi):
                 continue
             print("Found download link: ", dl_link)
             resp = requests.get(dl_link)
-            inmemory = BytesIO(resp.content)  # don't save locally just send to user
+            inmemory = resp.content  # don't save locally just send to user
             print(f"connection to {x} succeeded!")
             break  # the first service that worked
 

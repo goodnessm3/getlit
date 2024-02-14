@@ -2,12 +2,14 @@ from flask import Flask
 import os
 from subprocess import Popen
 
+
 def create_app(test_config=None):
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='rutbaga',
         PERMANENT_SESSION_LIFETIME=157000000,
+        SAVE_DIRECTORY=r"C:\Users\crg\Desktop"
     )
 
     if test_config is None:

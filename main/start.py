@@ -1,7 +1,8 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, send_file
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, send_file, current_app
 from io import BytesIO
 from main.downloader import get_paper, write_info_to_db, check_services
 from main.db import get_db
+import os
 
 bp = Blueprint('lookup_page', __name__, url_prefix='')
 
@@ -14,33 +15,24 @@ def begin():
         return render_template('page1/page1.html')
 
     elif request.method == "POST":
-        if session.get("tok", None) == "louder":
 
-            print(request.form)
-            doi = request.form["doi"]
-            data, name, myinfo = get_paper(doi)
+        doi = request.form["doi"]
+        data, name, myinfo = get_paper(doi)
 
-            db = get_db()
-            cur = db.cursor()
-            write_info_to_db(cur, doi, myinfo)
-            db.commit()
+        db = get_db()
+        cur = db.cursor()
+        write_info_to_db(cur, doi, myinfo)
+        db.commit()
 
-            if data:
-                return send_file(data, download_name=name)
-            else:
-                flash("Connection to all services failed.")
-                return render_template('page1/page1.html')
+        if data:
+            destination = os.path.join(current_app.config["SAVE_DIRECTORY"], name)
+            with open(destination, "wb") as f:
+                f.write(data)
+            return send_file(BytesIO(data), download_name=name)
+
         else:
+            flash("Connection to all services failed.")
             return render_template('page1/page1.html')
-
-
-@bp.route('/ajax', methods=('GET',))
-def ajax_example():
-
-    if not "tok" in session:
-        session["tok"] = "louder"
-
-    return render_template('ajax/ajax.html')
 
 
 @bp.route('/services', methods=("GET",))
