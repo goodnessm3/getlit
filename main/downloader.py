@@ -104,12 +104,15 @@ def determine_filename(info):
     return normalize("NFKD", out).replace(" ", "") + str(year) + ".pdf"
 
 
-def get_dl_link(url_root, doi):
+def get_dl_link(url_root, doi, cookie):
 
     """get a pdf download link from the service at url_root for a document specified by doi"""
 
     try:
-        resp = requests.get(url_root + "/" + doi)
+        if cookie:
+            resp = requests.get(url_root + "/" + doi)
+        else:
+            resp = requests.get(url_root + "/" + doi, headers={"cookie": cookie})
     except Exception as e:
         raise e  # sometimes services go down
     soup = BeautifulSoup(resp.content, "html.parser")
@@ -124,7 +127,8 @@ def get_dl_link(url_root, doi):
                 return to_ret
 
 
-def get_paper(doi):
+def get_paper(doi, cookie):
+
     """Look up the citation info for a paper specified by doi, using CrossRef. Download the paper
     from an external service, and make an entry in a local db storing the paper info."""
 
@@ -133,10 +137,12 @@ def get_paper(doi):
     fname = determine_filename(myjson)  # decide what to call the file when we save it, using json, not the parsed info
 
     inmemory = None  # default values only overwritten if one service is successful in the loop
+    resp = None
+    x = None
 
-    for x in SERVICES:
+    for x in SERVICES: # TODO: pass origin and referrer
         try:
-            dl_link = get_dl_link(x, doi)  # this also queries the service and may fail, exception is propagated
+            dl_link = get_dl_link(x, doi, cookie)  # this also queries the service and may fail, exception is propagated
             if not dl_link:
                 print(f"Download link not found on page for {x}")
                 continue
@@ -149,7 +155,45 @@ def get_paper(doi):
         except requests.exceptions.ConnectionError:
             print(f"connection to {x} failed")
 
-    return inmemory, fname, myinfo
+    return inmemory, fname, myinfo, resp, x  # return the whole response as well in case we need it
+
+
+def extract_captcha_img(html):
+
+    """We are being presented with a captcha page, extract and return the URL"""
+
+    soup = BeautifulSoup(html, "html.parser")
+    im = soup.find_all("img")[0]["src"]  # assuming the layout of the page never changes it only has this one image
+    hidden = None
+
+    for x in soup.find_all("input"):
+        q = x.get("type")
+        if q == "hidden":
+            hidden = (x.get("value"))
+
+    return im, hidden
+
+
+def save_captcha_image(url):
+
+    data = requests.get(url)
+    parts = url.split("/")
+    dest = parts[-1]
+    with open(os.path.join("main", "static", dest), "wb") as f:
+        f.write(data.content)
+    print(f"saved captcha image {dest}")
+    return dest
+
+
+def answer_captcha(url, answer, cookie, hidden):
+
+    print("in hte answer func, the url naswer and cookie are", url, answer, cookie)
+    headers = {"cookie": cookie}
+    resp = requests.post(url, data={"answer": answer, "id": hidden}, headers=headers)
+    # this primes the server so that the next time we make our original get request, it will go through
+    #print("here is data after posting captcha")
+    #print(resp.headers)
+    #print(resp.content)
 
 
 def load_services():
