@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}AJAX example{% endblock %}</h1>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+
+{% block content %}
+
+
+<input type="text" id="user-text">
+
+
+<div id="demo">
+<button type="button" onclick="loadDoc(document.getElementById('user-text').value)">Change Content</button>
+</div>
+<table id="mytable">
+    <tr>
+        <th>First column</th>
+    </tr>
+</table>
+
+<img src="{{ url_for('static', filename='cbsmall.png') }}">
+
+<script>
+function loadDoc(astr) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var table = document.getElementById("mytable");
+      var row = table.insertRow(-1);
+      var cell1 = row.insertCell(0);
+      cell1.innerHTML =
+      this.responseText;
+    }
+  };
+  xhttp.open("GET", "stringfunc/" + astr, true);
+  xhttp.send();
+}
+</script>
+
+{% endblock %}
+
+

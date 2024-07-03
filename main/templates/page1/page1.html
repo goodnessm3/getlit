@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Hello world!{% endblock %}</h1>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+
+{% block content %}
+
+<style>
+    mydiv {
+  width: 100px;
+  height: 50px;
+  font-weight: bold;
+  position: relative;
+  animation: mymove 0.4s infinite alternate-reverse;
+  animation-timing-function:cubic-bezier(0,.34,.28,1);
+  animation-delay:-1s;
+}
+
+@keyframes mymove {
+  from {top: 50px;}
+  to {top: 0px;}
+}
+
+</style>
+
+  <form style="display:inline;" method="POST">
+      <input type="text" id="doi" name="doi" required>
+      <input type="submit" value="Get">
+  </form>
+
+<br>
+
+{% if "tok" in session and session["tok"] == "louder" %}
+<mydiv>
+<img src="{{ url_for('static', filename='cbsmall.png') }}", height="240">
+</mydiv>
+{% else %}
+<img src="{{ url_for('static', filename='cbsmall.png') }}">
+{% endif %}
+
+
+{% endblock %}
+
