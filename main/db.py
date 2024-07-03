@@ -6,7 +6,7 @@ def get_db():
 
     if "db" not in g:
         g.db = sqlite3.connect("lit_db.sqlite3")
-        schema = '''CREATE TABLE "papers" (
+        schema = '''CREATE TABLE IF NOT EXISTS "papers" (
                     "doi"	TEXT,
                     "first_author"	TEXT,
                     "authors"	TEXT,
