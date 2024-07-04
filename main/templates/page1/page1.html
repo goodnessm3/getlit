@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Hello world!{% endblock %}</h1>
+<h1>{% block title %}Literature{% endblock %}</h1>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {% endblock %}
 
@@ -23,6 +23,22 @@
   to {top: 0px;}
 }
 
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: center;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
 </style>
 
   <form style="display:inline;" method="POST">
@@ -39,6 +55,27 @@
 {% else %}
 <img src="{{ url_for('static', filename='cbsmall.png') }}">
 {% endif %}
+
+<table>
+  <tr>
+    <th>Title</th>
+    <th>Author</th>
+    <th>Journal</th>
+      <th>Year</th>
+      <th>Tags</th>
+  </tr>
+
+{% for item in table %}
+  <tr>
+      <td><a href="/pdf/{{ item[-1] }}">{{ item[0] }}</a></td>
+    {% for entry in item[1:-1] %}
+      <td>{{ entry }}</td>
+    {% endfor %}
+  </tr>
+{% endfor %}
+
+</table>
+
 
 
 {% endblock %}

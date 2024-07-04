@@ -1,8 +1,9 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, send_file, current_app
 from io import BytesIO
 from main.downloader import get_paper, write_info_to_db, check_services, extract_captcha_img, answer_captcha, save_captcha_image, get_cached
-from main.db import get_db
+from main.db import get_db, dump_contents_for_page
 import os
+import json
 
 bp = Blueprint('lookup_page', __name__, url_prefix='')
 
@@ -19,7 +20,9 @@ def begin():
             return send_file(BytesIO(data), download_name=name)
             #######
         else:
-            return render_template('page1/page1.html')
+            table = dump_contents_for_page()
+            floc = current_app.config["SAVE_DIRECTORY"]  # to make download links
+            return render_template('page1/page1.html', table=table, file_loc=floc)  # normal viewing
 
     elif request.method == "POST":
 
@@ -45,7 +48,7 @@ def begin():
 
                 # now that the file was successfully found, record it in the database, so we can provide it
                 # directly next time rather than going to the source each time
-                write_info_to_db(cur, doi, myinfo, destination)
+                write_info_to_db(cur, doi, myinfo, name)
                 db.commit()
 
                 print(f"Cached a new file at: {destination}")
@@ -62,7 +65,7 @@ def begin():
                 session["captcha_link"] = captcha_img
                 session["respurl"] = resp.url
                 session["doi"] = doi  # preserve this so we can load the doc after solving the captcha
-                print("redirecting to captch page")
+                print("redirecting to captcha page")
                 return redirect(url_for("lookup_page.captcha"))
 
         else:

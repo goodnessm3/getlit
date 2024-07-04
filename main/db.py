@@ -25,6 +25,14 @@ def get_db():
     return g.db
 
 
+def dump_contents_for_page():
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute('''SELECT title, first_author, journal, year, tags, file_path FROM papers''')
+    return cur.fetchall()
+
+
 def close_db(e=None):
 
     db = g.pop("db", None)
